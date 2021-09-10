@@ -56,7 +56,7 @@ def serialize_payload(n, blockheight):
     payload = hexlify(struct.pack(
         "!cQQL", b'\x00',
         int(block) << 40 | int(tx) << 16 | int(out),
-        int(n['amount_msat']),
+        int(n['msatoshi']),
         blockheight + n['delay'])).decode('ASCII')
     payload += "00" * 12
     return payload
