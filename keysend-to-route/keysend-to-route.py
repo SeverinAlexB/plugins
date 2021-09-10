@@ -70,7 +70,7 @@ def serialize_payload(n, blockheight):
 
 
 def buildpath(payload, route):
-    blockheight = 1000 #plugin.rpc.getinfo()['blockheight']
+    blockheight = plugin.rpc.getinfo()['blockheight']
     first_hop = route[0]
     # Need to shift the parameters by one hop
     hops = []
