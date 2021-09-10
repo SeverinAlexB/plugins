@@ -81,6 +81,7 @@ def deliver(payload, payment_hash, route):
         failcode = e.error['data']['failcode']
         failingidx = e.error['data']['erring_index']
         logger.info(f'waitsendpay error: failcode: {failcode}, failingidx: {failingidx}')
+        logger.error(str(e.error))
         if failcode == 16399 or failingidx == len(hops):
             return {'keysendUnsupported': True}
         else:
