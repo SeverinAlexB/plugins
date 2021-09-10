@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 from binascii import hexlify
+
+from mylogger import get_my_logger
 from onion import OnionPayload
 from onion import TlvPayload
 from pyln.client import Plugin, RpcError
@@ -8,13 +10,7 @@ import os
 import struct
 import logging
 
-logger = logging.getLogger('keysend-to-route')
-logger.setLevel(logging.DEBUG)
-fh = logging.FileHandler('keysend-to-route.log')
-fh.setLevel('debug')
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-fh.setFormatter(formatter)
-logger.addHandler(fh)
+logger = get_my_logger()
 
 plugin = Plugin()
 
