@@ -19,39 +19,6 @@ TLV_KEYSEND_PREIMAGE = 5482373484
 # TLV_NOISE_TIMESTAMP = 34349343
 
 
-class Message(object):
-    def __init__(self, sender, body, signature, payment=None, id=None):
-        self.id = id
-        self.sender = sender
-        self.body = body
-        self.signature = signature
-        self.payment = payment
-        self.verified = None
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "sender": self.sender,
-            "body": self.body,
-            "signature": hexlify(self.signature).decode('ASCII'),
-            "payment": self.payment.to_dict() if self.payment is not None else None,
-            "verified": self.verified,
-        }
-
-
-class Payment(object):
-    def __init__(self, payment_key, amount):
-        self.payment_key = payment_key
-        self.amount = amount
-
-    def to_dict(self):
-        return {
-            "payment_key": hexlify(self.payment_key).decode('ASCII'),
-            "payment_hash": hashlib.sha256(self.payment_key).hexdigest(),
-            "amount": self.amount,
-        }
-
-
 def serialize_payload(n, blockheight):
     block, tx, out = n['channel'].split('x')
     long_channel_id = int(block) << 40 | int(tx) << 16 | int(out)
@@ -114,8 +81,10 @@ def deliver(payload, payment_hash, route):
         failcode = e.error['data']['failcode']
         failingidx = e.error['data']['erring_index']
         logger.info(f'waitsendpay error: failcode: {failcode}, failingidx: {failingidx}')
-        # if failcode == 16399 or failingidx == len(hops):
-        return {'route': route, 'payment_hash': payment_hash, 'success': False,
+        if failcode == 16399 or failingidx == len(hops):
+            return {'keysendUnsupported': True}
+        else:
+            return {'route': route, 'payment_hash': payment_hash, 'success': False,
                 'error': str(e.error), 'hops': hops, 'first_hop': first_hop}
 
 
