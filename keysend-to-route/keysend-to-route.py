@@ -6,9 +6,15 @@ from pyln.client import Plugin, RpcError
 import hashlib
 import os
 import struct
-import time
-import zbase32
+import logging
 
+logger = logging.getLogger('keysend-to-route')
+logger.setLevel(logging.DEBUG)
+fh = logging.FileHandler('keysend-to-route.log')
+fh.setLevel('debug')
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+logger.addHandler(fh)
 
 plugin = Plugin()
 
@@ -53,17 +59,22 @@ class Payment(object):
 
 def serialize_payload(n, blockheight):
     block, tx, out = n['channel'].split('x')
+    long_channel_id = int(block) << 40 | int(tx) << 16 | int(out)
+    msat = int(n['msatoshi'])
+    bh = blockheight + n['delay']
+
+    logger.debug(f'Payload of {n["channel"]}: {long_channel_id}, {msat}, {bh}')
     payload = hexlify(struct.pack(
         "!cQQL", b'\x00',
-        int(block) << 40 | int(tx) << 16 | int(out),
-        int(n['msatoshi']),
-        blockheight + n['delay'])).decode('ASCII')
+        long_channel_id,
+        msat,
+        bh)).decode('ASCII')
     payload += "00" * 12
     return payload
 
 
 def buildpath(payload, route):
-    blockheight = plugin.rpc.getinfo()['blockheight']
+    blockheight = 1000 #plugin.rpc.getinfo()['blockheight']
     first_hop = route[0]
     # Need to shift the parameters by one hop
     hops = []
@@ -89,13 +100,9 @@ def deliver(payload, payment_hash, route):
     """
     payment_hash = hexlify(payment_hash).decode('ASCII')
 
-    # plugin.log("Starting attempt {} to deliver message to {}".format(node_id))
-
     first_hop, hops, route = buildpath(payload, route)
+    logger.info(f'Firsthop: {first_hop}, hops: {hops}')
     onion = plugin.rpc.createonion(hops=hops, assocdata=payment_hash)
-
-    # return {'route': route, 'payment_hash': payment_hash, 'success': False,
-    #         'hops': hops, 'first_hop': first_hop}
 
     plugin.rpc.sendonion(onion=onion['onion'],
                          first_hop=first_hop,
@@ -124,8 +131,8 @@ def keysend_to_route(route, request, **kwargs):
 
     payload.add_field(TLV_KEYSEND_PREIMAGE, payment_key)
 
-    print('Keysend to route')
-    print(f'Route: {route}')
+    logger.info('----- Keysend to route started ------')
+    logger.info(f'Route: {route}')
     res = deliver(
         payload=payload.to_bytes(),
         route=route,

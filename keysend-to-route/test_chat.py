@@ -1,17 +1,15 @@
 from onion import TlvPayload
-from flaky import flaky
-from pprint import pprint
+
 from pyln.client import RpcError
 from pyln.testing.fixtures import *  # noqa: F401,F403
 
 import hashlib
 import os
 import pytest
-import unittest
 import zbase32
 
 
-plugin = os.path.join(os.path.dirname(__file__), 'noise.py')
+plugin = os.path.join(os.path.dirname(__file__), 'keysend-to-route.py')
 
 
 def test_sendmsg_success(node_factory, executor):

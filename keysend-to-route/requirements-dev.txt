@@ -1,2 +1,3 @@
 flaky ~= 3.7.0
 pytest
+pyln-testing
