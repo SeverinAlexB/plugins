@@ -95,7 +95,8 @@ def keysend_to_route(route, plugin=None, request=None, **kwargs):
     logger.info('-----')
     logger.info('----- Keysend to route started ------')
     logger.info(f'Route: {route}')
-    logger.info(f'Kwargs: {kwargs}')
+    logger.debug(f'Kwargs: {kwargs}, plugin: {plugin}, request: {request}.')
+
 
     payment_key = os.urandom(32)
     payment_hash = hashlib.sha256(payment_key).digest()
