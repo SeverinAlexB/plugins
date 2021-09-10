@@ -105,17 +105,20 @@ def deliver(payload, payment_hash, route):
                          payment_hash=payment_hash,
                          shared_secrets=onion['shared_secrets']
                          )
+    logger.info('Onion sent')
     try:
         plugin.rpc.waitsendpay(payment_hash=payment_hash)
+        logger.info('Success')
         return {'route': route, 'payment_hash': payment_hash, 'success': True}
     except RpcError as e:
+
         failcode = e.error['data']['failcode']
         failingidx = e.error['data']['erring_index']
-        if failcode == 16399 or failingidx == len(hops):
-            return {'route': route, 'payment_hash': payment_hash, 'success': False,
-                    'error': str(e.error), 'hops': hops, 'first_hop': first_hop}
+        logger.info(f'waitsendpay error: failcode: {failcode}, failingidx: {failingidx}')
+        # if failcode == 16399 or failingidx == len(hops):
+        return {'route': route, 'payment_hash': payment_hash, 'success': False,
+                'error': str(e.error), 'hops': hops, 'first_hop': first_hop}
 
-    raise ValueError('Could not reach destination')
 
 
 @plugin.async_method('keysend-to-route')
