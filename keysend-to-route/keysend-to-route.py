@@ -84,12 +84,12 @@ def buildpath(plugin, payload, route):
     return first_hop, hops, route
 
 
-def deliver(node_id, payload, payment_hash, route):
+def deliver(payload, payment_hash, route):
     """Do your best to deliver `payload` to `node_id`.
     """
     payment_hash = hexlify(payment_hash).decode('ASCII')
 
-    plugin.log("Starting attempt {} to deliver message to {}".format(node_id))
+    # plugin.log("Starting attempt {} to deliver message to {}".format(node_id))
 
     first_hop, hops, route = buildpath(plugin, payload, route)
     onion = plugin.rpc.createonion(hops=hops, assocdata=payment_hash)
@@ -108,11 +108,11 @@ def deliver(node_id, payload, payment_hash, route):
         if failcode == 16399 or failingidx == len(hops):
             return {'route': route, 'payment_hash': payment_hash, 'success': False}
 
-    raise ValueError('Could not reach destination {node_id}'.format(node_id=node_id))
+    raise ValueError('Could not reach destination')
 
 
 @plugin.async_method('keysend-to-route')
-def keysend_to_route(node_id, route, request, **kwargs):
+def keysend_to_route(route, request, **kwargs):
     payload = TlvPayload()
 
     payment_key = os.urandom(32)
@@ -120,10 +120,10 @@ def keysend_to_route(node_id, route, request, **kwargs):
 
     payload.add_field(TLV_KEYSEND_PREIMAGE, payment_key)
 
-
+    print('Keysend to route')
+    print(f'Route: {route}')
     res = deliver(
-        node_id,
-        payload.to_bytes(),
+        payload=payload.to_bytes(),
         route=route,
         payment_hash=payment_hash
     )
