@@ -106,7 +106,7 @@ def deliver(payload, payment_hash, route):
         failcode = e.error['data']['failcode']
         failingidx = e.error['data']['erring_index']
         if failcode == 16399 or failingidx == len(hops):
-            return {'route': route, 'payment_hash': payment_hash, 'success': False, 'error': e}
+            return {'route': route, 'payment_hash': payment_hash, 'success': False, 'error': str(e.error)}
 
     raise ValueError('Could not reach destination')
 
