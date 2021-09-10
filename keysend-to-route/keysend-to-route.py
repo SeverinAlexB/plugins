@@ -2,22 +2,21 @@
 from binascii import hexlify
 
 from mylogger import get_my_logger
-from onion import OnionPayload
 from onion import TlvPayload
 from pyln.client import Plugin, RpcError
 import hashlib
 import os
 import struct
-import logging
+
 
 logger = get_my_logger()
 
 plugin = Plugin()
 
 TLV_KEYSEND_PREIMAGE = 5482373484
-TLV_NOISE_MESSAGE = 34349334
-TLV_NOISE_SIGNATURE = 34349335
-TLV_NOISE_TIMESTAMP = 34349343
+# TLV_NOISE_MESSAGE = 34349334
+# TLV_NOISE_SIGNATURE = 34349335
+# TLV_NOISE_TIMESTAMP = 34349343
 
 
 class Message(object):
@@ -123,17 +122,20 @@ def deliver(payload, payment_hash, route):
 
 @plugin.async_method('keysend-to-route')
 def keysend_to_route(route, request, **kwargs):
-    payload = TlvPayload()
+    logger.info('-----')
+    logger.info('----- Keysend to route started ------')
+    logger.info(f'Route: {route}')
 
     payment_key = os.urandom(32)
     payment_hash = hashlib.sha256(payment_key).digest()
 
+    payload = TlvPayload()
     payload.add_field(TLV_KEYSEND_PREIMAGE, payment_key)
+    payload_bytes = payload.to_bytes()
+    logger.info(f'Payload: {payload}')
 
-    logger.info('----- Keysend to route started ------')
-    logger.info(f'Route: {route}')
     res = deliver(
-        payload=payload.to_bytes(),
+        payload=payload_bytes,
         route=route,
         payment_hash=payment_hash
     )
