@@ -94,8 +94,8 @@ def deliver(payload, payment_hash, route):
     first_hop, hops, route = buildpath(payload, route)
     onion = plugin.rpc.createonion(hops=hops, assocdata=payment_hash)
 
-    return {'route': route, 'payment_hash': payment_hash, 'success': False,
-            'hops': hops, 'first_hop': first_hop}
+    # return {'route': route, 'payment_hash': payment_hash, 'success': False,
+    #         'hops': hops, 'first_hop': first_hop}
 
     plugin.rpc.sendonion(onion=onion['onion'],
                          first_hop=first_hop,
