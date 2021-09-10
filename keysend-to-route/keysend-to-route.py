@@ -62,7 +62,7 @@ def serialize_payload(n, blockheight):
     return payload
 
 
-def buildpath(plugin, payload, route):
+def buildpath(payload, route):
     blockheight = plugin.rpc.getinfo()['blockheight']
     first_hop = route[0]
     # Need to shift the parameters by one hop
@@ -91,8 +91,11 @@ def deliver(payload, payment_hash, route):
 
     # plugin.log("Starting attempt {} to deliver message to {}".format(node_id))
 
-    first_hop, hops, route = buildpath(plugin, payload, route)
+    first_hop, hops, route = buildpath(payload, route)
     onion = plugin.rpc.createonion(hops=hops, assocdata=payment_hash)
+
+    return {'route': route, 'payment_hash': payment_hash, 'success': False,
+            'hops': hops, 'first_hop': first_hop}
 
     plugin.rpc.sendonion(onion=onion['onion'],
                          first_hop=first_hop,
@@ -106,7 +109,8 @@ def deliver(payload, payment_hash, route):
         failcode = e.error['data']['failcode']
         failingidx = e.error['data']['erring_index']
         if failcode == 16399 or failingidx == len(hops):
-            return {'route': route, 'payment_hash': payment_hash, 'success': False, 'error': str(e.error)}
+            return {'route': route, 'payment_hash': payment_hash, 'success': False,
+                    'error': str(e.error), 'hops': hops, 'first_hop': first_hop}
 
     raise ValueError('Could not reach destination')
 
