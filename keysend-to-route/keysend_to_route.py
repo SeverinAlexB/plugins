@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from io import BytesIO
+
 from binascii import hexlify
 
 from mylogger import get_my_logger
@@ -8,7 +10,7 @@ import hashlib
 import os
 import struct
 
-from primitives import varint_encode_direct
+from primitives import varint_encode_direct, varint_encode
 
 logger = get_my_logger()
 
@@ -116,8 +118,11 @@ def construct_final_payload(payment_key, route, blockheight):
     outgoing_cltv = blockheight
     payload.add_field(TLV_OUTGOING_CLTV_VALUE, varint_encode_direct(outgoing_cltv))
 
-    value = payment_key + varint_encode_direct(amount_msat)
-    payload.add_field(TLV_PAYMENT_DATA, value)
+    buffer = BytesIO()
+    buffer.write(payment_key)
+    varint_encode(amount_msat, buffer)
+    value1 = buffer.getvalue()
+    payload.add_field(TLV_PAYMENT_DATA, value1)
     return payload
 
 
