@@ -91,12 +91,11 @@ def deliver(payload, payment_hash, route):
 
 
 @plugin.method('keysend-to-route')
-def keysend_to_route(route, plugin=None, request=None, **kwargs):
+def keysend_to_route(plugin=None, request=None, route=None,  **kwargs):
     logger.info('-----')
     logger.info('----- Keysend to route started ------')
     logger.info(f'Route: {route}')
     logger.debug(f'Kwargs: {kwargs}, plugin: {plugin}, request: {request}.')
-
 
     payment_key = os.urandom(32)
     payment_hash = hashlib.sha256(payment_key).digest()
