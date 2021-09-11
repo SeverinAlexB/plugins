@@ -112,11 +112,13 @@ def construct_final_payload(payment_key, route, blockheight):
     payload = TlvPayload()
     payload.add_field(TLV_KEYSEND_PREIMAGE, payment_key)
 
-    # amount_msat = route[-1]['msatoshi']
-    # payload.add_field(TLV_AMT_TO_FORWARD, varint_encode_direct(amount_msat))
-    #
-    # outgoing_cltv = 0  # blockheight + 0
-    # payload.add_field(TLV_OUTGOING_CLTV_VALUE, varint_encode_direct(outgoing_cltv))
+    logger.debug(f'lastHop Payload: {route[-1]}')
+    amount_msat = route[-1]['msatoshi']
+    payload.add_field(TLV_AMT_TO_FORWARD, varint_encode_direct(amount_msat))
+
+    last_hop_delay = route[-1]['delay']
+    outgoing_cltv = blockheight + last_hop_delay
+    payload.add_field(TLV_OUTGOING_CLTV_VALUE, varint_encode_direct(outgoing_cltv))
 
     return payload
 
