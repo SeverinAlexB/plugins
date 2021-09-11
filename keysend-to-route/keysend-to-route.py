@@ -77,12 +77,11 @@ def deliver(payload, payment_hash, route):
         logger.info('Success')
         return {'route': route, 'payment_hash': payment_hash, 'success': True}
     except RpcError as e:
-
         failcode = e.error['data']['failcode']
         failingidx = e.error['data']['erring_index']
         logger.info(f'waitsendpay error: failcode: {failcode}, failingidx: {failingidx}')
         logger.error(str(e.error))
-        if failcode == 16399 or failingidx == len(hops):
+        if failcode == 16399 and failingidx == len(hops):
             return {'keysendUnsupported': True}
         else:
             return {'route': route, 'payment_hash': payment_hash, 'success': False,
