@@ -115,14 +115,9 @@ def construct_final_payload(payment_key, route, blockheight):
     amount_msat = route[-1]['msatoshi']
     payload.add_field(TLV_AMT_TO_FORWARD, varint_encode_direct(amount_msat))
 
-    outgoing_cltv = blockheight + 0
+    outgoing_cltv = 0  # blockheight + 0
     payload.add_field(TLV_OUTGOING_CLTV_VALUE, varint_encode_direct(outgoing_cltv))
 
-    # buffer = BytesIO()
-    # buffer.write(payment_key)
-    # varint_encode(amount_msat, buffer)
-    # value1 = buffer.getvalue()
-    # payload.add_field(TLV_PAYMENT_DATA, value1)
     return payload
 
 
