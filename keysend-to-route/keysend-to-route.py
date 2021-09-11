@@ -91,10 +91,12 @@ def deliver(payload, payment_hash, route):
 
 @plugin.method('keysend-to-route')
 def keysend_to_route(route,  **kwargs):
+    amountMsat = route[-1]['msatoshi']
     logger.info('-----')
     logger.info('----- Keysend to route started ------')
     logger.info(f'Route: {route}')
-    logger.debug(f'Kwargs: {kwargs}, plugin: {plugin}')
+    logger.info(f'{amountMsat}msat to send to destination')
+
 
     payment_key = os.urandom(32)
     payment_hash = hashlib.sha256(payment_key).digest()
