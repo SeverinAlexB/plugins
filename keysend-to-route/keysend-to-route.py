@@ -8,15 +8,34 @@ import hashlib
 import os
 import struct
 
+from primitives import varint_encode_direct
 
 logger = get_my_logger()
 
 plugin = Plugin()
 
 TLV_KEYSEND_PREIMAGE = 5482373484
-# TLV_NOISE_MESSAGE = 34349334
-# TLV_NOISE_SIGNATURE = 34349335
-# TLV_NOISE_TIMESTAMP = 34349343
+'''
+type: 2 (amt_to_forward)
+data:
+[tu64:amt_to_forward]
+'''
+TLV_AMT_TO_FORWARD = 2
+'''
+type: 4 (outgoing_cltv_value)
+data:
+[tu32:outgoing_cltv_value]
+'''
+TLV_OUTGOING_CLTV_VALUE = 4
+
+'''
+type: 8 (payment_data)
+data:
+[32*byte:payment_secret]
+[tu64:total_msat]
+'''
+TLV_PAYMENT_DATA = 8
+
 
 
 def serialize_payload(n, blockheight):
@@ -35,8 +54,7 @@ def serialize_payload(n, blockheight):
     return payload
 
 
-def buildpath(payload, route):
-    blockheight = plugin.rpc.getinfo()['blockheight']
+def buildpath(payload, route, blockheight):
     first_hop = route[0]
     # Need to shift the parameters by one hop
     hops = []
@@ -57,12 +75,12 @@ def buildpath(payload, route):
     return first_hop, hops, route
 
 
-def deliver(payload, payment_hash, route):
+def deliver(payload, payment_hash, route, blockheight):
     """Do your best to deliver `payload` to `node_id`.
     """
     payment_hash = hexlify(payment_hash).decode('ASCII')
 
-    first_hop, hops, route = buildpath(payload, route)
+    first_hop, hops, route = buildpath(payload, route, blockheight)
     logger.info(f'Firsthop: {first_hop}, hops: {hops}')
     onion = plugin.rpc.createonion(hops=hops, assocdata=payment_hash)
 
@@ -88,6 +106,20 @@ def deliver(payload, payment_hash, route):
                 'error': str(e.error), 'hops': hops, 'first_hop': first_hop}
 
 
+def construct_final_payload(payment_key, route, blockheight):
+    payload = TlvPayload()
+    payload.add_field(TLV_KEYSEND_PREIMAGE, payment_key)
+
+    amount_msat = route[-1]['msatoshi']
+    payload.add_field(TLV_AMT_TO_FORWARD, varint_encode_direct(amount_msat))
+
+    outgoing_cltv = blockheight + route[-1]['delay']
+    payload.add_field(TLV_OUTGOING_CLTV_VALUE, varint_encode_direct(outgoing_cltv))
+
+    value = payment_key + varint_encode_direct(amount_msat)
+    payload.add_field(TLV_PAYMENT_DATA, value)
+    return payload
+
 
 @plugin.method('keysend-to-route')
 def keysend_to_route(route,  **kwargs):
@@ -97,19 +129,20 @@ def keysend_to_route(route,  **kwargs):
     logger.info(f'Route: {route}')
     logger.info(f'{amountMsat}msat to send to destination')
 
+    blockheight = plugin.rpc.getinfo()['blockheight']
 
     payment_key = os.urandom(32)
     payment_hash = hashlib.sha256(payment_key).digest()
 
-    payload = TlvPayload()
-    payload.add_field(TLV_KEYSEND_PREIMAGE, payment_key)
-    payload_bytes = payload.to_bytes()
+    payload = construct_final_payload(payment_key, route, blockheight)
+
     logger.info(f'Payload: {payload}')
 
     res = deliver(
-        payload=payload_bytes,
+        payload=payload.to_bytes(),
         route=route,
-        payment_hash=payment_hash
+        payment_hash=payment_hash,
+        blockheight=blockheight
     )
     return res
 

@@ -1,4 +1,11 @@
 import struct
+from io import BytesIO
+
+
+def varint_encode_direct(i):
+    b = BytesIO()
+    varint_encode(i, b)
+    return b.getvalue()
 
 
 def varint_encode(i, w):
