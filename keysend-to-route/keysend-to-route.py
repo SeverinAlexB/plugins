@@ -91,7 +91,7 @@ def deliver(payload, payment_hash, route):
 
 
 @plugin.method('keysend-to-route')
-def keysend_to_route(plugin, route,  **kwargs):
+def keysend_to_route(route,  **kwargs):
     logger.info('-----')
     logger.info('----- Keysend to route started ------')
     logger.info(f'Route: {route}')
