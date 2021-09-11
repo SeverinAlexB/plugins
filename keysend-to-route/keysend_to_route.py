@@ -113,23 +113,25 @@ def construct_final_payload(payment_key, route, blockheight):
     amount_msat = route[-1]['msatoshi']
     payload.add_field(TLV_AMT_TO_FORWARD, varint_encode_direct(amount_msat))
 
-    outgoing_cltv = blockheight + route[-1]['delay']
+    outgoing_cltv = blockheight
     payload.add_field(TLV_OUTGOING_CLTV_VALUE, varint_encode_direct(outgoing_cltv))
 
-    # value = payment_key + varint_encode_direct(amount_msat)
-    # payload.add_field(TLV_PAYMENT_DATA, value)
+    value = payment_key + varint_encode_direct(amount_msat)
+    payload.add_field(TLV_PAYMENT_DATA, value)
     return payload
 
 
 @plugin.method('keysend-to-route')
-def keysend_to_route(route,  **kwargs):
+def keysend_to_route(route, is_test=False,  **kwargs):
     amountMsat = route[-1]['msatoshi']
     logger.info('-----')
     logger.info('----- Keysend to route started ------')
     logger.info(f'Route: {route}')
     logger.info(f'{amountMsat}msat to send to destination')
 
-    blockheight = plugin.rpc.getinfo()['blockheight']
+    blockheight = 0
+    if not is_test:
+        blockheight = plugin.rpc.getinfo()['blockheight']
 
     payment_key = os.urandom(32)
     payment_hash = hashlib.sha256(payment_key).digest()
