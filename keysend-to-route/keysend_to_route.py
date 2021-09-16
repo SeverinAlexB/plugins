@@ -30,15 +30,6 @@ data:
 '''
 TLV_OUTGOING_CLTV_VALUE = 4
 
-'''
-type: 8 (payment_data)
-data:
-[32*byte:payment_secret]
-[tu64:total_msat]
-'''
-TLV_PAYMENT_DATA = 8
-
-
 
 def serialize_payload(n, blockheight):
     block, tx, out = n['channel'].split('x')
@@ -46,7 +37,6 @@ def serialize_payload(n, blockheight):
     msat = int(n['msatoshi'])
     bh = blockheight + n['delay']
 
-    logger.debug(f'Payload of {n["channel"]}: {long_channel_id}, {msat}, {bh}')
     payload = hexlify(struct.pack(
         "!cQQL", b'\x00',
         long_channel_id,
@@ -91,7 +81,6 @@ def deliver(payload, payment_hash, route, blockheight):
                          payment_hash=payment_hash,
                          shared_secrets=onion['shared_secrets']
                          )
-    logger.info('Onion sent')
     try:
         plugin.rpc.waitsendpay(payment_hash=payment_hash)
         logger.info('Success')
@@ -99,7 +88,6 @@ def deliver(payload, payment_hash, route, blockheight):
     except RpcError as e:
         failcode = e.error['data']['failcode']
         failingidx = e.error['data']['erring_index']
-        logger.info(f'waitsendpay error: failcode: {failcode}, failingidx: {failingidx}')
         logger.error(str(e.error))
         if failcode == 16399 and failingidx == len(hops):
             return {'keysendUnsupported': True}
@@ -110,7 +98,6 @@ def deliver(payload, payment_hash, route, blockheight):
 
 def construct_final_payload(payment_key, route, blockheight):
     payload = TlvPayload()
-    logger.debug(f'lastHop Payload: {route[-1]}')
 
     amount_msat = route[-1]['msatoshi']
     encoded_msat = noleading_zeros_int_encode(amount_msat)
@@ -123,9 +110,6 @@ def construct_final_payload(payment_key, route, blockheight):
 
     payload.add_field(TLV_KEYSEND_PREIMAGE, payment_key, 'TLV_KEYSEND_PREIMAGE')
 
-    for field in payload.fields:
-        fbytes = field.to_bytes()
-        print(field, fbytes)
     return payload
 
 
@@ -145,8 +129,6 @@ def keysend_to_route(route, is_test=False,  **kwargs):
     payment_hash = hashlib.sha256(payment_key).digest()
 
     payload = construct_final_payload(payment_key, route, blockheight)
-
-    logger.info(f'Payload: {payload}')
 
     res = deliver(
         payload=payload.to_bytes(),
