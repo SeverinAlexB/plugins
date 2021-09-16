@@ -111,6 +111,7 @@ def deliver(payload, payment_hash, route, blockheight):
 def construct_final_payload(payment_key, route, blockheight):
     payload = TlvPayload()
     logger.debug(f'lastHop Payload: {route[-1]}')
+
     amount_msat = route[-1]['msatoshi']
     encoded_msat = noleading_zeros_int_encode(amount_msat)
     payload.add_field(TLV_AMT_TO_FORWARD, encoded_msat, 'TLV_AMT_TO_FORWARD')
