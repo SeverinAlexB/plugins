@@ -21,6 +21,19 @@ def varint_encode(i, w):
         w.write(struct.pack("!BQ", 0xFF, i))
 
 
+def varint_encode_min(i):
+    """Encode an integer `i` into the writer `w`
+    """
+    if i < 0xFD:
+        return struct.pack("!B", i)
+    elif i <= 0xFFFF:
+        return struct.pack("!H", i)
+    elif i <= 0xFFFFFFFF:
+        return struct.pack("!L", i)
+    else:
+        return struct.pack("!Q", i)
+
+
 def varint_decode(r):
     """Decode an integer from reader `r`
     """
