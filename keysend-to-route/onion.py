@@ -136,8 +136,8 @@ class TlvPayload(OnionPayload):
     def from_hex(cls, h):
         return cls.from_bytes(unhexlify(h))
 
-    def add_field(self, typenum, value):
-        self.fields.append(TlvField(typenum=typenum, value=value))
+    def add_field(self, typenum, value, description=None):
+        self.fields.append(TlvField(typenum=typenum, value=value, description=description))
 
     def get(self, key, default=None):
         for f in self.fields:

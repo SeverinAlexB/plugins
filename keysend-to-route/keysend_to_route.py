@@ -110,23 +110,29 @@ def deliver(payload, payment_hash, route, blockheight):
 
 def construct_final_payload(payment_key, route, blockheight):
     payload = TlvPayload()
-    payload.add_field(TLV_KEYSEND_PREIMAGE, payment_key)
-
     logger.debug(f'lastHop Payload: {route[-1]}')
     amount_msat = route[-1]['msatoshi']
-    payload.add_field(TLV_AMT_TO_FORWARD, varint_encode_direct(amount_msat))
+    struct.pack("!Q", amount_msat)
+    encoded_msat = struct.pack("!Q", amount_msat)
+    payload.add_field(TLV_AMT_TO_FORWARD, encoded_msat, 'TLV_AMT_TO_FORWARD')
 
     last_hop_delay = route[-1]['delay']
     outgoing_cltv = blockheight + last_hop_delay
-    payload.add_field(TLV_OUTGOING_CLTV_VALUE, varint_encode_direct(outgoing_cltv))
+    encoded_cltv = struct.pack("!L", outgoing_cltv)
+    payload.add_field(TLV_OUTGOING_CLTV_VALUE, encoded_cltv, 'TLV_OUTGOING_CLTV_VALUE')
 
+    payload.add_field(TLV_KEYSEND_PREIMAGE, payment_key, 'TLV_KEYSEND_PREIMAGE')
+
+    for field in payload.fields:
+        fbytes = field.to_bytes()
+        print(field, fbytes)
     return payload
 
 
 @plugin.method('keysend-to-route')
 def keysend_to_route(route, is_test=False,  **kwargs):
     amountMsat = route[-1]['msatoshi']
-    logger.info('-----')
+    logger.info('')
     logger.info('----- Keysend to route started ------')
     logger.info(f'Route: {route}')
     logger.info(f'{amountMsat}msat to send to destination')
