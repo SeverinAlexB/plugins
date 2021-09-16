@@ -21,17 +21,17 @@ def varint_encode(i, w):
         w.write(struct.pack("!BQ", 0xFF, i))
 
 
-def varint_encode_min(i):
-    """Encode an integer `i` into the writer `w`
+def noleading_zeros_int_encode(i):
+    """Encode an integer to bytes and remove all leading zeros
     """
-    if i < 0xFD:
-        return struct.pack("!B", i)
-    elif i <= 0xFFFF:
-        return struct.pack("!H", i)
-    elif i <= 0xFFFFFFFF:
-        return struct.pack("!L", i)
-    else:
-        return struct.pack("!Q", i)
+    bytes = struct.pack("!Q", i)
+    while len(bytes) > 0:
+        first_byte = bytes[0]
+        if first_byte == 0:
+            bytes = bytes[1:]
+        else:
+            break
+    return bytes
 
 
 def varint_decode(r):

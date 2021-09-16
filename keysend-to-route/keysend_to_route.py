@@ -10,7 +10,7 @@ import hashlib
 import os
 import struct
 
-from primitives import varint_encode_direct, varint_encode, varint_encode_min
+from primitives import noleading_zeros_int_encode
 
 logger = get_my_logger()
 
@@ -112,12 +112,12 @@ def construct_final_payload(payment_key, route, blockheight):
     payload = TlvPayload()
     logger.debug(f'lastHop Payload: {route[-1]}')
     amount_msat = route[-1]['msatoshi']
-    encoded_msat = varint_encode_min(amount_msat)
+    encoded_msat = noleading_zeros_int_encode(amount_msat)
     payload.add_field(TLV_AMT_TO_FORWARD, encoded_msat, 'TLV_AMT_TO_FORWARD')
 
     last_hop_delay = route[-1]['delay']
     outgoing_cltv = blockheight + last_hop_delay
-    encoded_cltv = varint_encode_min(outgoing_cltv)
+    encoded_cltv = noleading_zeros_int_encode(outgoing_cltv)
     payload.add_field(TLV_OUTGOING_CLTV_VALUE, encoded_cltv, 'TLV_OUTGOING_CLTV_VALUE')
 
     payload.add_field(TLV_KEYSEND_PREIMAGE, payment_key, 'TLV_KEYSEND_PREIMAGE')
