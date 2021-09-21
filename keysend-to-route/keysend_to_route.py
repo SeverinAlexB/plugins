@@ -82,7 +82,7 @@ def deliver(payload, payment_hash, route, blockheight):
                          shared_secrets=onion['shared_secrets']
                          )
     try:
-        plugin.rpc.waitsendpay(payment_hash=payment_hash)
+        plugin.rpc.waitsendpay(payment_hash=payment_hash, timeout=20)
         logger.info('Success')
         return {'route': route, 'payment_hash': payment_hash, 'success': True}
     except RpcError as e:
